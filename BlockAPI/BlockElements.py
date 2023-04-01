@@ -1,5 +1,7 @@
 import datetime
 
+from typing import Tuple
+
 from BlockAPI.CompositionObjects import *
 
 
@@ -8,7 +10,7 @@ class Button(BlockInterface):
                  action_id: str,
                  url: str = None,
                  value: str = None,
-                 style: str = None,
+                 style: str = DEFAULT,
                  confirm: ConfirmationDialog = None,
                  access_label: str = None):
         check_length(text.text, _min=1, _max=75)
@@ -21,18 +23,18 @@ class Button(BlockInterface):
             "action_id": action_id
         }
 
-        if value:
+        if value is not None:
             check_length(value, _min=1, _max=2000)
             self._body["value"] = value
-        if url:
+        if url is not None:
             check_length(url, _min=1, _max=3000)
             self._body["url"] = url
         if style:
             check_style(style)
             self._body["style"] = style
-        if confirm:
+        if confirm is not None:
             self._body["confirm"] = confirm
-        if access_label:
+        if access_label is not None:
             check_length(access_label, _min=1, _max=75)
             self._body["accessibility_label"] = access_label
 
@@ -87,21 +89,21 @@ class Button(BlockInterface):
 
     @url.setter
     def url(self, _url: str):
-        if not _url:
-            self._body.pop("url", None)
-        else:
+        if _url is not None:
             check_length(_url, _min=1, _max=3000)
             self._body["url"] = _url
+        else:
+            self._body.pop("url", None)
 
         self._url = _url
 
     @value.setter
     def value(self, _value: str):
-        if not _value:
-            self._body.pop("value", None)
-        else:
+        if _value is not None:
             check_length(_value, _min=1, _max=2000)
             self._body["value"] = _value
+        else:
+            self._body.pop("value", None)
 
         self._value = _value
 
@@ -117,11 +119,11 @@ class Button(BlockInterface):
 
     @access_label.setter
     def access_label(self, _access_label):
-        if not _access_label:
-            self._body.pop("access_label", None)
-        else:
+        if _access_label is not None:
             check_length(_access_label, _min=1, _max=75)
             self._body["access_label"] = _access_label
+        else:
+            self._body.pop("access_label", None)
 
         self._access_label = _access_label
 
@@ -146,7 +148,7 @@ class CheckBoxGroup(BlockInterface):
             "action_id": action_id,
             "options": options
         }
-        if init_options:
+        if init_options is not None:
             if not all(list(map(lambda x: x in options, init_options))):
                 raise ValueError("Initial options must match the options list")
             self._body["initial_options"] = init_options
@@ -174,7 +176,14 @@ class CheckBoxGroup(BlockInterface):
 
     @options.setter
     def options(self, _options):
-        self._set_select_options(_options)
+
+        check_length(_options, _min=1, _max=10)
+        if self._init_options:
+            if not all(list(map(lambda x: x in self._options, self._init_options))):
+                raise ValueError("Initial options must match the options list")
+
+        self._options = _options
+        self._body["options"] = _options
 
     @property
     def init_options(self):
@@ -182,12 +191,13 @@ class CheckBoxGroup(BlockInterface):
 
     @init_options.setter
     def init_options(self, _init_options):
-        if _init_options:
+        if _init_options is not None:
+            check_length(_init_options, _min=1, _max=10)
             if not all(list(map(lambda x: x in self._options, _init_options))):
                 raise ValueError("Initial options must match the options list")
             else:
                 self._body["initial_options"] = _init_options
-        elif not _init_options:
+        else:
             self._body.pop("initial_options", None)
 
         self._init_options = _init_options
@@ -253,10 +263,7 @@ class DatePicker(BlockInterface):
 
     @placeholder.setter
     def placeholder(self, _placeholder):
-        check_length(_placeholder.text, _min=1, _max=255)
-        check_valid_type(_placeholder.type, _types=PLAIN_TEXT)
-        self._body["placeholder"] = _placeholder
-        self._placeholder = _placeholder
+        self._set_placeholder(_placeholder)
 
     @property
     def init_date(self):
@@ -288,7 +295,7 @@ class DateTimePicker(BlockInterface):
 
     def __init__(self,
                  action_id: str,
-                 initial_date_time: datetime.datetime,
+                 initial_date_time: datetime.datetime = None,
                  confirm: ConfirmationDialog = None,
                  focus_on_load: bool = False):
         check_length(action_id, _min=1, _max=255)
@@ -324,7 +331,11 @@ class DateTimePicker(BlockInterface):
 
     @initial_date_time.setter
     def initial_date_time(self, _initial_date_time):
-        self._body["initial_date_time"] = int(_initial_date_time.time()).__str__()
+        if _initial_date_time:
+            self._body["initial_date_time"] = int(_initial_date_time.time()).__str__()
+        else:
+            self._body.pop("initial_date_time", None)
+
         self._initial_date_time = _initial_date_time
 
     @property
@@ -359,7 +370,7 @@ class EmailInput(BlockInterface):
             "action_id": action_id
         }
 
-        if initial_value:
+        if initial_value is not None:
             self._body["initial_value"] = initial_value
 
         if placeholder:
@@ -392,10 +403,7 @@ class EmailInput(BlockInterface):
 
     @placeholder.setter
     def placeholder(self, _placeholder):
-        check_length(_placeholder.text, _min=1, _max=255)
-        check_valid_type(_placeholder.type, _types=PLAIN_TEXT)
-        self._body["placeholder"] = _placeholder
-        self._placeholder = _placeholder
+        self._set_placeholder(_placeholder)
 
     @property
     def initial_value(self):
@@ -403,7 +411,11 @@ class EmailInput(BlockInterface):
 
     @initial_value.setter
     def initial_value(self, _initial_value):
-        self._body["initial_value"] = _initial_value
+        if _initial_value is not None:
+            self._body["initial_value"] = _initial_value
+        else:
+            self._body.pop("initial_value", None)
+
         self._initial_value = _initial_value
 
     @property
@@ -412,7 +424,10 @@ class EmailInput(BlockInterface):
 
     @dispatch_action_config.setter
     def dispatch_action_config(self, _dispatch_action_config):
-        self._body["dispatch_action_config"] = _dispatch_action_config
+        if _dispatch_action_config:
+            self._body["dispatch_action_config"] = _dispatch_action_config
+        else:
+            self._body.pop("dispatch_action_config", None)
         self._dispatch_action_config = _dispatch_action_config
 
     @property
@@ -474,43 +489,50 @@ class StaticOptions(BlockInterface):
                  focus_on_load: bool = False):
 
         check_length(action_id, _min=1, _max=255)
-        check_length(placeholder.text, _min=1, _max=150)
-        check_valid_type(placeholder.type, _types=PLAIN_TEXT)
 
         if type != "multi_static_select" or type != "static_select":
             raise ValueError(f"This option type must be either static_select or multi_static_select.")
 
         if options is None and option_groups is None:
-            raise ValueError("Options and option groups is both None, exactly 1 must be specified.")
+            raise ValueError("Options and option groups are both None, exactly 1 must be specified.")
+
         if options is not None and option_groups is not None:
             raise ValueError("Options and option groups are both specified, exactly 1 must be specified")
 
+        if not 1 <= max_selected_items <= 100:
+            raise ValueError("Maximum selected items value must be in range [1, 100].")
+
         self._body = {
             "type": type,
-            "placeholder": placeholder,
             "action_id": action_id,
         }
 
-        if options:
+        if placeholder:
+            check_length(placeholder.text, _min=1, _max=150)
+            check_valid_type(placeholder.type, _types=PLAIN_TEXT)
+            self._body["placeholder"] = placeholder
+
+        if options is not None:
             check_length(options, _min=1, _max=100)
             self._body["options"] = options
-        elif option_groups:
+        elif option_groups is not None:
             check_length(option_groups, _min=1, _max=100)
             self._body["option_groups"] = option_groups
 
-        if init_options:
+        if init_options is not None:
+            check_length(init_options, _min=1, _max=100)
             if options:
                 if not all(list(map(lambda x: x in options, init_options))):
                     raise ValueError("Initial options must match the options list.")
             if option_groups:
-                pass  # TODO: add check
+                _l = [all(list(map(lambda x: x in _og.options, init_options))) for _og in option_groups]
+                if _l.count(True) != 1:
+                    raise ValueError("Initial options must match exactly on of the option groups ")
 
             if type == "static_select":
                 self._body["initial_option"] = init_options[0]
             else:
                 self._body["initial_options"] = init_options
-                if not 1 <= max_selected_items <= 100:
-                    raise ValueError("Maximum selected items value must be in range [1, 100].")
                 self._body["max_selected_items"] = max_selected_items
 
         if confirm:
@@ -557,17 +579,72 @@ class StaticOptions(BlockInterface):
         return self._options
 
     @options.setter
-    def options(self, _options):
-        self._set_select_options(_options)
+    def options(self, _options: Optional[Union[List[Option], Tuple[List[Option], bool]]]):
+        if _options is None:
+            if self._option_groups is None:
+                raise ValueError("Can not remove options when option_groups is not specified.")
+            else:
+                self._body.pop("options", None)
+                self._body["option_groups"] = self._option_groups
+
+        elif isinstance(_options, List):
+            if self._option_groups:
+                raise ValueError("Can not specify options when option_groups is also specified. "
+                                 "To replace option_groups, with options supply a tuple with second argument "
+                                 "True. To simply update options property without replacing option_groups, "
+                                 "supply a tuple with second argument False.")
+
+            else:
+                check_length(_options, _min=1, _max=100)
+                self._body["options"] = _options
+        else:
+            _options, _replace = _options   # Unpack values
+            check_length(_options, _min=1, _max=100)
+            if _replace:
+                self._body.pop("option_groups", None)
+                self._body["options"] = _options
+
+        if self._init_options and _options:
+            if not all(list(map(lambda x: x in _options, self._init_options))):
+                raise ValueError("Initial options must match the options list.")
+
+        self._option_groups = _options
 
     @property
     def option_groups(self):
         return self._option_groups
 
     @option_groups.setter
-    def option_groups(self, _option_groups):
-        check_length(_option_groups, _min=1, _max=100)
-        self._body["option_groups"] = _option_groups
+    def option_groups(self, _option_groups: Optional[Union[List[OptionGroups], Tuple[List[OptionGroups]], bool]]):
+        if _option_groups is None:
+            if self._options is None:
+                raise ValueError("Can not remove option_groups when options is not specified.")
+            else:
+                self._body.pop("option_groups", None)
+                self._body["options"] = self._options
+
+        elif isinstance(_option_groups, List):
+            if self._options:
+                raise ValueError("Can not specify option_groups when options is also specified. To replace options,"
+                                 "with option_groups supply a tuple with second argument True. To simply update"
+                                 "option_groups property without replacing options, supply a tuple with second"
+                                 "argument False.")
+
+            else:
+                check_length(_option_groups, _min=1, _max=100)
+                self._body["option_groups"] = _option_groups
+        else:
+            _option_groups, _replace = _option_groups   # Unpack values
+            check_length(_option_groups, _min=1, _max=100)
+            if _replace:
+                self._body.pop("options", None)
+                self._body["option_groups"] = _option_groups
+
+        if self._init_options and _option_groups:
+            _l = [all(list(map(lambda x: x in _og.options, self._init_options))) for _og in _option_groups]
+            if _l.count(True) != 1:
+                raise ValueError("Initial options must match exactly on of the option groups ")
+
         self._option_groups = _option_groups
 
     @property
@@ -610,7 +687,7 @@ class ExternalDataOptions(BlockInterface):
                  action_id: str,
                  placeholder: Text = None,
                  min_query_length: int = 3,
-                 init_options: List[dict] = None,
+                 init_options: List[Option] = None,
                  confirm: ConfirmationDialog = None,
                  max_selected_items: int = 1,
                  focus_on_load: bool = False):
@@ -636,12 +713,13 @@ class ExternalDataOptions(BlockInterface):
             self._body["placeholder"] = placeholder
 
         if type == "multi_external_select":
-            # TODO: add check
-            if init_options:
+            if init_options is not None:
+                check_length(init_options, _min=1, _max=2 ** 32)
                 self.body["initial_options"] = init_options
             self.body["max_selected_items"] = max_selected_items
         else:
-            if init_options:
+            if init_options is not None:
+                check_length(init_options, _min=1, _max=2 ** 32)
                 self.body["initial_option"] = init_options[0]
 
         if confirm:
@@ -745,11 +823,13 @@ class UserListOptions(BlockInterface):
             self._body["placeholder"] = placeholder
 
         if type == "multi_users_select":
-            if init_users:
+            if init_users is not None:
+                check_length(init_users, _min=1, _max=2 ** 32)
                 self.body["initial_users"] = init_users
             self.body["max_selected_items"] = max_selected_items
         else:
-            if init_users:
+            if init_users is not None:
+                check_length(init_users, _min=1, _max=2 ** 32)
                 self.body["initial_user"] = init_users[0]
         if confirm:
             self.body["confirm"] = confirm
@@ -826,7 +906,7 @@ class ConversationOptions(BlockInterface):
                  type: str,
                  action_id: str,
                  placeholder: Text = None,
-                 init_conversation: List[str] = None,
+                 init_conversations: List[str] = None,
                  default_to_current_conversation: bool = False,
                  confirm: ConfirmationDialog = None,
                  max_selected_items: int = 1,
@@ -853,12 +933,14 @@ class ConversationOptions(BlockInterface):
             self._body["placeholder"] = placeholder
 
         if type == "multi_conversations_select":
-            if init_conversation:
-                self._body["initial_conversations"] = init_conversation
+            if init_conversations is not None:
+                check_length(init_conversations, _min=1, _max=2 ** 32)
+                self._body["initial_conversations"] = init_conversations
             self._body["max_selected_items"] = max_selected_items
         else:
-            if init_conversation:
-                self._body["initial_conversation"] = init_conversation[0]
+            if init_conversations is not None:
+                check_length(init_conversations, _min=1, _max=2 ** 32)
+                self._body["initial_conversation"] = init_conversations[0]
             self._body["response_url_enabled"] = response_url_enabled
         self._body["default_to_current_conversation"] = default_to_current_conversation
         if confirm:
@@ -872,10 +954,11 @@ class ConversationOptions(BlockInterface):
         self._action_id = action_id
         self._confirm = confirm
         self._max_selected_items = max_selected_items
-        self._init_conversation = init_conversation
+        self._init_conversations = init_conversations
         self._default_to_current_conversation = default_to_current_conversation
         self.focus_on_load = focus_on_load
         self._response_url_enabled = response_url_enabled
+        self._filter = filter
 
     @property
     def type(self):
@@ -902,12 +985,12 @@ class ConversationOptions(BlockInterface):
         self._set_action_id(_action_id)
 
     @property
-    def init_conversation(self):
-        return self._init_conversation
+    def init_conversations(self):
+        return self._init_conversations
 
-    @init_conversation.setter
-    def init_conversation(self, _init_conversation):
-        self._set_init_options(_init_conversation, "conversation")
+    @init_conversations.setter
+    def init_conversations(self, _init_conversations):
+        self._set_init_options(_init_conversations, "conversation")
 
     @property
     def confirm(self):
@@ -952,6 +1035,19 @@ class ConversationOptions(BlockInterface):
             self._body["response_url_enabled"] = _response_url_enabled
         self._response_url_enabled = _response_url_enabled
 
+    @property
+    def filter(self):
+        return self._filter
+
+    @filter.setter
+    def filter(self, _filter):
+        if _filter:
+            self._body["filter"] = _filter
+        else:
+            self._body.pop("filter", None)
+
+        self._filter = _filter
+
 
 class PublicChannelOptions(BlockInterface):
 
@@ -985,11 +1081,13 @@ class PublicChannelOptions(BlockInterface):
             self._body["placeholder"] = placeholder
 
         if type == "multi_channels_select":
-            if init_channels:
+            if init_channels is not None:
+                check_length(init_channels, _min=1, _max=2 ** 32)
                 self.body["initial_channels"] = init_channels
             self.body["max_selected_items"] = max_selected_items
         else:
-            if init_channels:
+            if init_channels is not None:
+                check_length(init_channels, _min=1, _max=2 ** 32)
                 self.body["initial_channel"] = init_channels[0]
             self._body["response_url_enabled"] = response_url_enabled
         if confirm:
@@ -1001,7 +1099,7 @@ class PublicChannelOptions(BlockInterface):
         self._confirm = confirm
         self._max_selected_items = max_selected_items
         self._init_channels = init_channels
-        self.focus_on_load = focus_on_load
+        self._focus_on_load = focus_on_load
         self._response_url_enabled = response_url_enabled
 
     @property
@@ -1075,7 +1173,7 @@ class OverFlowMenu(BlockInterface):
 
     def __init__(self,
                  action_id: str,
-                 options: List[dict],
+                 options: List[Option],
                  confirm: ConfirmationDialog = None):
         check_length(action_id, _min=1, _max=255)
         check_length(options, _min=1, _max=5)
@@ -1105,7 +1203,7 @@ class OverFlowMenu(BlockInterface):
         return self._options
 
     @options.setter
-    def options(self, _options):
+    def options(self, _options: List[Option]):
         check_length(_options, _min=1, _max=5)
         self._body["options"] = _options
         self._options = _options
@@ -1136,19 +1234,19 @@ class NumberInput(BlockInterface):
             "is_decimal_allowed": is_decimal_allowed
         }
 
-        if action_id:
+        if action_id is not None:
             check_length(action_id, _min=1, _max=255)
             self._body["action_id"] = action_id
 
-        if initial_value:
+        if initial_value is not None:
             check_is_number(initial_value, is_decimal_allowed)
             self._body["initial_value"] = initial_value
 
-        if min_value:
+        if min_value is not None:
             check_is_number(min_value, is_decimal_allowed)
             self._body["min_value"] = min_value
 
-        if max_value:
+        if max_value is not None:
             check_is_number(max_value, is_decimal_allowed)
             self._body["max_value"] = max_value
 
@@ -1197,7 +1295,7 @@ class NumberInput(BlockInterface):
 
     @action_id.setter
     def action_id(self, _action_id):
-        if _action_id:
+        if _action_id is not None:
             self._body["action_id"] = _action_id
         else:
             self._body.pop("action_id", None)
@@ -1209,7 +1307,7 @@ class NumberInput(BlockInterface):
 
     @init_value.setter
     def init_value(self, _init_value):
-        if _init_value:
+        if _init_value is not None:
             check_is_number(_init_value, self._is_decimal_allowed)
             self._body["initial_value"] = _init_value
         else:
@@ -1222,14 +1320,17 @@ class NumberInput(BlockInterface):
 
     @max_value.setter
     def max_value(self, _max_value):
-        check_is_number(_max_value, self._is_decimal_allowed)
-        if self._min_value:
-            _min_v = get_number_from_string(self._min_value)
-            _max_v = get_number_from_string(_max_value)
-            if _min_v > _max_v:
-                raise ValueError("min_value must be less or equal to max_value.")
+        if _max_value is not None:
+            check_is_number(_max_value, self._is_decimal_allowed)
+            if self._min_value:
+                _min_v = get_number_from_string(self._min_value)
+                _max_v = get_number_from_string(_max_value)
+                if _min_v > _max_v:
+                    raise ValueError("min_value must be less or equal to max_value.")
+            self._body["max_value"] = _max_value
+        else:
+            self._body.pop("max_value", None)
 
-        self._body["max_value"] = _max_value
         self._max_value = _max_value
 
     @property
@@ -1238,14 +1339,17 @@ class NumberInput(BlockInterface):
 
     @min_value.setter
     def min_value(self, _min_value):
-        check_is_number(_min_value, self._is_decimal_allowed)
-        if self._max_value:
-            _min_v = get_number_from_string(_min_value)
-            _max_v = get_number_from_string(self._max_value)
-            if _min_v > _max_v:
-                raise ValueError("min_value must be less or equal to max_value.")
+        if _min_value is not None:
+            check_is_number(_min_value, self._is_decimal_allowed)
+            if self._max_value:
+                _min_v = get_number_from_string(_min_value)
+                _max_v = get_number_from_string(self._max_value)
+                if _min_v > _max_v:
+                    raise ValueError("min_value must be less or equal to max_value.")
 
-        self._body["min_value"] = _min_value
+            self._body["min_value"] = _min_value
+        else:
+            self._body.pop("min_value", None)
         self._min_value = _min_value
 
     @property
@@ -1302,7 +1406,7 @@ class PlainTextInput(BlockInterface):
             check_valid_type(placeholder.type, _types=PLAIN_TEXT)
             self._body["placeholder"] = placeholder
 
-        if init_value:
+        if init_value is not None:
             self._body["initial_value"] = init_value
 
         self._body["multiline"] = multiline
@@ -1375,7 +1479,8 @@ class PlainTextInput(BlockInterface):
 
     @init_value.setter
     def init_value(self, _init_value):
-        if _init_value:
+        if _init_value is not None:
+            check_length(_init_value, _min=1, _max=2 ** 32)
             self._body["initial_value"] = _init_value
         else:
             self._body.pop("initial_value", None)
@@ -1473,7 +1578,7 @@ class RadioButtonGroup(BlockInterface):
 
     @property
     def init_option(self):
-        return
+        return self._init_option
 
     @init_option.setter
     def init_option(self, _init_option):

@@ -1,4 +1,4 @@
-from utils import *
+from BlockAPI.utils import *
 
 
 def _build_list(_l: list):
@@ -36,6 +36,18 @@ class BlockInterface:
                 return False
         return True
 
+    def get_actual_value(self, key: str):
+        """
+        Method to retrieve actual value of a property element. I.e. the value of the field that the dictionary would
+        contain after calling o.__dict__().
+        :param key: Key value to be search for in the body (dictionary) of the object. E.g.: Assume Text object t of
+        type "mrkdwn" and set t.emoji = True. Then the value of t.emoji == True however, the t.get_actual_value("emoji")
+        would yield None as the emoji can not be set for Text object of type "mrkdwn" (i.e. the dictionary returned by
+        t.__dict__() does not contain this key value pair).
+        :return: Actual value of the property or none if the property is not in the body.
+        """
+        return self._body.get(key)
+
     def build(self) -> dict:
         for key, value in self._body.items():
             if isinstance(value, list):
@@ -50,8 +62,12 @@ class BlockInterface:
     def __dict__(self) -> dict:
         return self.build()
 
+    # PROPERTY SETTING METHODS #
     # _type_name can be option, user, conversation or channel, append with 's' if multi type
     def _set_select_type(self, _type: str, _type_name: str):
+        if not _type:
+            raise ValueError("Type must be specified.")
+
         # From single to multi
         if self._type.startswith("static") and _type.startswith("multi"):
             _option = self._body.pop(f"initial_{_type_name}")
@@ -66,19 +82,11 @@ class BlockInterface:
             self._body[f"initial_{_type_name}"] = _options[0]
             self._body.pop("max_selected_items", None)
 
+            # Conversation and channel single selection types also have extra field "response_url_enabled"
             if _type_name == "conversation" or _type_name == "channel":
                 self._body["response_url_enabled"] = self._response_url_enabled
 
         self._type = _type
-
-    def _set_select_options(self, _options):
-        check_length(_options, _min=1, _max=10)
-        if self._init_options:
-            if not all(list(map(lambda x: x in self._options, self._init_options))):
-                raise ValueError("Initial options must match the options list")
-
-        self._options = _options
-        self._body["options"] = _options
 
     def _set_action_id(self, _action_id):
         check_length(_action_id, _min=1, _max=255)
@@ -113,20 +121,29 @@ class BlockInterface:
         else:
             self._body["initial_{_type_name}"] = _init_options[0]
 
+        if _type_name == "option":
+            if self._options:
+                if not all(list(map(lambda x: x in self._options, _init_options))):
+                    raise ValueError("Initial options must match the options list.")
+            if self._option_groups:
+                _l = [all(list(map(lambda x: x in _og.options, _init_options))) for _og in self._option_groups]
+                if _l.count(True) != 1:
+                    raise ValueError("Initial options must match exactly on of the option groups ")
+
         self._init_options = _init_options
 
     def _set_max_selected_items(self, _max_selected_items):
-        if not self._type.startswith("multi"):
-            return  # Ignore if not multi
-
         if not 1 <= _max_selected_items <= 100:
             raise ValueError("Maximum selected items value must be in range [1, 100].")
-        self._body["max_selected_items"] = _max_selected_items
+
+        if self._type.startswith("multi"):
+            self._body["max_selected_items"] = _max_selected_items
+
         self._max_selected_items = _max_selected_items
 
     def _set_block_id(self, _block_id):
-        check_length(_block_id, _min=1, _max=255)
-        if _block_id:
+        if _block_id is not None:
+            check_length(_block_id, _min=1, _max=255)
             self._body["block_id"] = _block_id
         else:
             self._body.pop("_block_id", None)

@@ -42,11 +42,11 @@ class Text(BlockInterface):
 
     @property
     def emoji(self) -> Optional[bool]:
-        return self._body.get("emoji")
+        return self._emoji
 
     @property
     def verbatim(self) -> Optional[bool]:
-        return self._body.get("verbatim")
+        return self._verbatim
 
     @text.setter
     def text(self, text: str):
@@ -69,22 +69,14 @@ class Text(BlockInterface):
         self._type = type
 
     @emoji.setter
-    def emoji(self, _emoji: bool, _strict: bool = False):
-        if self._body["type"] == MRKDWN:
-            if _strict:
-                raise ValueError(f"Can not set emoji for type {MRKDWN}.")
-        else:
-            self._body["emoji"] = _emoji
-            self._emoji = _emoji
+    def emoji(self, _emoji: bool):
+        self._body["emoji"] = _emoji
+        self._emoji = _emoji
 
     @verbatim.setter
-    def verbatim(self, _verbatim: bool, _strict: bool = False):
-        if self._body["type"] == PLAIN_TEXT:
-            if _strict:
-                raise ValueError(f"Can not set verbatim for type {PLAIN_TEXT}.")
-        else:
-            self._body["verbatim"] = _verbatim
-            self._verbatim = _verbatim
+    def verbatim(self, _verbatim: bool):
+        self._body["verbatim"] = _verbatim
+        self._verbatim = _verbatim
 
 
 class ConfirmationDialog(BlockInterface):
@@ -108,8 +100,8 @@ class ConfirmationDialog(BlockInterface):
         self._body = {
             "title": title,
             "text": text,
-            "confirm": self._confirm,
-            "deny": self._deny,
+            "confirm": confirm,
+            "deny": deny,
         }
 
         if style != DEFAULT:
@@ -178,9 +170,6 @@ class Option(BlockInterface):
         check_length(text.text, _min=1, _max=75)
         check_valid_type(text.type, _types=PLAIN_TEXT)
         check_length(value, _min=1, _max=75)
-        check_length(description.text, _min=1, _max=75)
-        check_valid_type(description.type, _types=PLAIN_TEXT)
-        check_length(url, _min=1, _max=3000)
 
         self._text = text
         self._value = value
@@ -192,9 +181,12 @@ class Option(BlockInterface):
             "value": value,
         }
 
-        if description:
+        if description is not None:
+            check_length(description.text, _min=1, _max=75)
+            check_valid_type(description.type, _types=PLAIN_TEXT)
             self._body["description"] = description
-        if url:
+        if url is not None:
+            check_length(url, _min=1, _max=3000)
             self._body["url"] = url
             
     def __eq__(self, other):
@@ -210,11 +202,11 @@ class Option(BlockInterface):
 
     @property
     def description(self) -> Optional[Text]:
-        return self._body.get("description")
+        return self._description
 
     @property
     def url(self) -> Optional[str]:
-        return self._body.get("url")
+        return self._url
 
     @text.setter
     def text(self, _text: Text):
@@ -285,45 +277,46 @@ class ConversationFilters(BlockInterface):
     def __init__(self, include: List[str] = None, exclude_external: bool = False, exclude_bots: bool = False):
         self._body = {}
 
-        if include:
+        if include is not None:
             check_filter_options(include)
             self._body["include"] = include
 
-        self.include = include
-        self.exclude_external = exclude_external
+        self._include = include
+        self._exclude_external = exclude_external
         self._body["exclude_external_shared_channels"] = exclude_external
-        self.exclude_bots = exclude_bots
+        self._exclude_bots = exclude_bots
         self._body["exclude_bots"] = exclude_bots
 
     @property
     def include(self) -> Optional[List[str]]:
-        return self.include
+        return self._include
 
     @property
     def exclude_external(self) -> bool:
-        return self.exclude_external
+        return self._exclude_external
 
     @property
     def exclude_bots(self) -> bool:
-        return self.exclude_bots
+        return self._exclude_bots
 
     @include.setter
     def include(self, _include: Optional[List[str]]):
-        self.include = _include
-        if _include:
+        if _include is not None:
             check_filter_options(_include)
             self._body["include"] = _include
         else:
             self._body.pop("include", None)
 
+        self._include = _include
+
     @exclude_external.setter
     def exclude_external(self, _exclude_external):
-        self.exclude_external = _exclude_external
+        self._exclude_external = _exclude_external
         self._body["exclude_external_shared_channels"] = _exclude_external
 
     @exclude_bots.setter
     def exclude_bots(self, _exclude_bots):
-        self.exclude_bots = _exclude_bots
+        self._exclude_bots = _exclude_bots
         self._body["exclude_bots"] = _exclude_bots
 
 
@@ -332,14 +325,14 @@ class DispatchActionConfig(BlockInterface):
     def __init__(self, config: List[str]):
         check_config_options(config)
         self._body = {"trigger_actions_on": config}
-        self.config = config
+        self._config = config
 
     @property
     def config(self):
-        return self.config
+        return self._config
 
     @config.setter
     def config(self, _config: List[str]):
         check_config_options(_config)
-        self.config = _config
+        self._config = _config
         self._body["trigger_actions_on"] = _config

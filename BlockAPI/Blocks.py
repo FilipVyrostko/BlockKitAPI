@@ -23,7 +23,7 @@ class ActionBlock(BlockInterface):
             "elements": elements
         }
 
-        if block_id:
+        if block_id is not None:
             check_length(block_id, _min=1, _max=255)
             self._body["block_id"] = block_id
 
@@ -65,7 +65,7 @@ class ContextBlock(BlockInterface):
             "elements": elements
         }
 
-        if block_id:
+        if block_id is not None:
             check_length(block_id, _min=1, _max=255)
             self._body["block_id"] = block_id
 
@@ -97,7 +97,7 @@ class DividerBlock(BlockInterface):
         self._body = {
             "type": "divider"
         }
-        if block_id:
+        if block_id is not None:
             check_length(block_id, _min=1, _max=255)
             self._body["block_id"] = block_id
 
@@ -124,7 +124,7 @@ class FileBlock(BlockInterface):
             "external_id": external_id,
             "source": "remote"
         }
-        if block_id:
+        if block_id is not None:
             check_length(block_id, _min=1, _max=255)
             self._body["block_id"] = block_id
 
@@ -162,7 +162,7 @@ class HeaderBlock(BlockInterface):
             "text": text
         }
 
-        if block_id:
+        if block_id is not None:
             check_length(block_id, _min=1, _max=255)
             self._body["block_id"] = block_id
 
@@ -209,7 +209,7 @@ class ImageBlock(BlockInterface):
             check_length(title.text, _min=1, _max=2000)
             check_valid_type(title.type, _types=PLAIN_TEXT)
             self._body["title"] = title
-        if block_id:
+        if block_id is not None:
             check_length(block_id, _min=1, _max=255)
             self._body["block_id"] = block_id
 
@@ -284,7 +284,7 @@ class InputBlock(BlockInterface):
             "element": element,
         }
 
-        if block_id:
+        if block_id is not None:
             check_length(block_id, _min=1, _max=255)
             self._body["block_id"] = block_id
         if hint:
@@ -384,7 +384,7 @@ class SectionBlock(BlockInterface):
         if text:
             check_length(text.text, _min=1, _max=3000)
             self._body["text"] = text
-        if block_id:
+        if block_id is not None:
             check_length(block_id, _min=1, _max=255)
             self._body["block_id"] = block_id
         if fields:
@@ -460,19 +460,23 @@ class VideoBlock(BlockInterface):
             "video_url": video_url
         }
 
-        if block_id:
+        if block_id is not None:
             check_length(block_id, _min=1, _max=255)
             self._body["block_id"] = block_id
-        if author_name:
+        if author_name is not None:
+            check_length(author_name, _min=1, _max=2 ** 32)
             self._body["author_name"] = author_name
         if description:
             check_valid_type(description.type, _types=PLAIN_TEXT)
             self._body["description"] = description
-        if provider_name:
+        if provider_name is not None:
+            check_length(provider_name, _min=1, _max=2 ** 32)
             self._body["provider_name"] = provider_name
-        if provider_icon_url:
+        if provider_icon_url is not None:
+            check_length(provider_icon_url, _min=1, _max=2 ** 32)
             self._body["provider_icon_url"] = provider_icon_url
-        if title_url:
+        if title_url is not None:
+            check_length(title_url, _min=1, _max=2 ** 32)
             if not title_url.startswith("https"):
                 raise ValueError("Title URL must be HTTPS.")
             self._body["title_url"] = title_url
@@ -534,7 +538,8 @@ class VideoBlock(BlockInterface):
 
     @author_name.setter
     def author_name(self, _author_name):
-        if _author_name:
+        if _author_name is not None:
+            check_length(_author_name, _min=1, _max=2 ** 32)
             self._body["author_name"] = _author_name
         else:
             self._body.pop("author_name", None)
@@ -567,7 +572,8 @@ class VideoBlock(BlockInterface):
 
     @provider_icon_url.setter
     def provider_icon_url(self, _provider_icon_url):
-        if _provider_icon_url:
+        if _provider_icon_url is not None:
+            check_length(_provider_icon_url, _min=1, _max=2 ** 32)
             self._body["provider_icon_url"] = _provider_icon_url
         else:
             self._body.pop("provide_icon_url", None)
@@ -579,7 +585,8 @@ class VideoBlock(BlockInterface):
 
     @provider_name.setter
     def provider_name(self, _provider_name):
-        if _provider_name:
+        if _provider_name is not None:
+            check_length(_provider_name, _min=1, _max=2 ** 32)
             self._body["provider_name"] = _provider_name
         else:
             self._body.pop("provider_name", None)
@@ -591,7 +598,8 @@ class VideoBlock(BlockInterface):
 
     @title_url.setter
     def title_url(self, _title_url):
-        if _title_url:
+        if _title_url is not None:
+            check_length(_title_url, _min=1, _max=2 ** 32)
             if not _title_url.startswith("https"):
                 raise ValueError("Title URL must be HTTPS.")
             self._body["title_url"] = _title_url

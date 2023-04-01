@@ -39,16 +39,19 @@ def check_style(_style: str):
 
 
 def check_filter_options(_filter_options: List[str]):
+    if not _filter_options:
+        raise ValueError("Filter list can not be empty.")
     _ops = ["im", "mpim", "private", "public"]
     if not all(list(map(lambda x: x in _ops, _filter_options))):
-        raise ValueError(f"Wrong include options, can only be {_ops}.")
+        raise ValueError(f"Wrong include options, can only be: {_ops}.")
 
 
 def check_config_options(_config: List[str]):
+    _valid_configs = ["on_enter_pressed", "on_character_entered"]
     if not _config:
         raise ValueError("Config list is empty.")
     else:
-        if "on_enter_pressed" not in _config and "on_character_entered" not in _config:
+        if len(_config) > 2 or not all(list(map(lambda x: x in _valid_configs, _config))):
             raise ValueError("Invalid configuration values. Must be on_enter_pressed, on_character_entered or both.")
 
 
