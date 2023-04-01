@@ -1,5 +1,7 @@
 from typing import Sized, Union, List
 
+from BlockAPI.CompositionObjects import OptionGroups
+
 PLAIN_TEXT = "plain_text"
 MRKDWN = "mrkdwn"
 DEFAULT = ""
@@ -73,3 +75,9 @@ def get_number_from_string(_value) -> Union[int, float]:
         return int(_value)
     except ValueError:
         return float(_value)
+
+
+def check_options_no_url(_options):
+    for _option in _options:
+        if _option._body.get("url") is not None:
+            raise ValueError("URL property for Option object can only be set for OverFlow menus.")

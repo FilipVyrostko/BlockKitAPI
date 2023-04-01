@@ -140,6 +140,7 @@ class CheckBoxGroup(BlockInterface):
                  init_options: List[Option] = None,
                  confirm: ConfirmationDialog = None,
                  focus_on_load: bool = False):
+        check_options_no_url(options)
         check_length(action_id, _min=1, _max=255)
         check_length(options, _min=1, _max=10)
 
@@ -149,6 +150,7 @@ class CheckBoxGroup(BlockInterface):
             "options": options
         }
         if init_options is not None:
+            check_options_no_url(init_options)
             if not all(list(map(lambda x: x in options, init_options))):
                 raise ValueError("Initial options must match the options list")
             self._body["initial_options"] = init_options
@@ -367,6 +369,7 @@ class EmailInput(BlockInterface):
         check_length(action_id, _min=1, _max=255)
 
         self._body = {
+            "type": "email_text_input",
             "action_id": action_id
         }
 
@@ -513,13 +516,17 @@ class StaticOptions(BlockInterface):
             self._body["placeholder"] = placeholder
 
         if options is not None:
+            check_options_no_url(options)
             check_length(options, _min=1, _max=100)
             self._body["options"] = options
         elif option_groups is not None:
+            for _og in option_groups:
+                check_options_no_url(_og.options)
             check_length(option_groups, _min=1, _max=100)
             self._body["option_groups"] = option_groups
 
         if init_options is not None:
+            check_options_no_url(init_options)
             check_length(init_options, _min=1, _max=100)
             if options:
                 if not all(list(map(lambda x: x in options, init_options))):
@@ -596,10 +603,12 @@ class StaticOptions(BlockInterface):
 
             else:
                 check_length(_options, _min=1, _max=100)
+                check_options_no_url(_options)
                 self._body["options"] = _options
         else:
             _options, _replace = _options   # Unpack values
             check_length(_options, _min=1, _max=100)
+            check_options_no_url(_options)
             if _replace:
                 self._body.pop("option_groups", None)
                 self._body["options"] = _options
@@ -632,10 +641,14 @@ class StaticOptions(BlockInterface):
 
             else:
                 check_length(_option_groups, _min=1, _max=100)
+                for _og in _option_groups:
+                    check_options_no_url(_og.options)
                 self._body["option_groups"] = _option_groups
         else:
             _option_groups, _replace = _option_groups   # Unpack values
             check_length(_option_groups, _min=1, _max=100)
+            for _og in _option_groups:
+                check_options_no_url(_og.options)
             if _replace:
                 self._body.pop("options", None)
                 self._body["option_groups"] = _option_groups
@@ -714,11 +727,13 @@ class ExternalDataOptions(BlockInterface):
 
         if type == "multi_external_select":
             if init_options is not None:
+                check_options_no_url(init_options)
                 check_length(init_options, _min=1, _max=2 ** 32)
                 self.body["initial_options"] = init_options
             self.body["max_selected_items"] = max_selected_items
         else:
             if init_options is not None:
+                check_options_no_url(init_options)
                 check_length(init_options, _min=1, _max=2 ** 32)
                 self.body["initial_option"] = init_options[0]
 
@@ -1534,6 +1549,7 @@ class RadioButtonGroup(BlockInterface):
                  focus_on_load: bool = False):
         check_length(action_id, _min=1, _max=255)
         check_length(options, _min=1, _max=10)
+        check_options_no_url(options)
 
         self._body = {
             "type": "radio_buttons",
@@ -1542,6 +1558,7 @@ class RadioButtonGroup(BlockInterface):
         }
 
         if init_option:
+            check_options_no_url([init_option])
             if options.count(init_option) != 1:
                 raise ValueError("Initial option must match exactly 1 option.")
             self._body["initial_option"] = init_option
@@ -1570,6 +1587,7 @@ class RadioButtonGroup(BlockInterface):
     @options.setter
     def options(self, _options):
         check_length(_options, _min=1, _max=10)
+        check_options_no_url(_options)
         if self._init_options:
             if _options.count(self._init_option) != 1:
                 raise ValueError("Initial option must match exactly 1 option.")
@@ -1583,6 +1601,7 @@ class RadioButtonGroup(BlockInterface):
     @init_option.setter
     def init_option(self, _init_option):
         if _init_option:
+            check_options_no_url([_init_option])
             if self._options.count(_init_option) != 1:
                 raise ValueError("Initial option must match exactly 1 option.")
             self._body["initial_option"] = _init_option
@@ -1619,6 +1638,7 @@ class TimePicker(BlockInterface):
         check_length(action_id, _min=1, _max=255)
 
         self._body = {
+            "type": "timepicker",
             "action_id": action_id
         }
 
@@ -1713,6 +1733,7 @@ class UrlInput(BlockInterface):
         check_length(action_id, _min=1, _max=255)
 
         self._body = {
+            "type": "url_text_input",
             "action_id": action_id
         }
 
